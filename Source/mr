@@ -1,0 +1,14 @@
+#!/bin/bash
+
+
+
+clear
+
+
+(cd ../Builds/LinuxMakefile; make)
+
+(cd ../Builds/LinuxMakefile/build; ./MusicPlayer)
+
+
+
+
