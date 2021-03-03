@@ -279,7 +279,6 @@ void MusicPlayerAudioProcessor::chooseAudioFile(){
     if(fileChosen){
 
         
-        transport.setSource(nullptr);
         juce::File file = chooser.getResult();
         juce::AudioFormatReader* reader = formatManager.createReaderFor(file);
         //DBG(reader->getFormatName());   
@@ -288,6 +287,7 @@ void MusicPlayerAudioProcessor::chooseAudioFile(){
 
         if(reader != nullptr){
             
+            transport.setSource(nullptr);//added Match 2021 - suggestion from Xenakios (discord)
             readerSource_ptr.reset(new juce::AudioFormatReaderSource(reader, true));
             transport.setSource(readerSource_ptr.get(),0,nullptr,reader->sampleRate);
 
