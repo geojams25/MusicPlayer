@@ -13,26 +13,13 @@
 //==============================================================================
 MusicPlayerAudioProcessor::MusicPlayerAudioProcessor() : AudioProcessor(BusesProperties().withOutput("Out", juce::AudioChannelSet::stereo()))
 
-/*
-#ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       )
-#endif
-    // ,state(stopped)
-
-*/
 {
     formatManager.registerBasicFormats();
     transport.addChangeListener(this);
 
     state = stopped;//initial state of transport
     
+
     
 
 }
@@ -41,6 +28,7 @@ MusicPlayerAudioProcessor::~MusicPlayerAudioProcessor()
 {
 
     transport.setSource(nullptr);
+    formatReader = nullptr;
 }
 
 
@@ -113,6 +101,7 @@ void MusicPlayerAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     // initialisation that you need..
     //
     transport.prepareToPlay(samplesPerBlock, sampleRate);
+
 }
 
 void MusicPlayerAudioProcessor::releaseResources()
@@ -157,40 +146,9 @@ void MusicPlayerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+        for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-
-
-    /*
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-    }
-    */
-
-   /* 
-    if(readerSource_ptr.get() == nullptr){ //used to replace above buffer.clear loop
-        
-        juce::AudioSourceChannelInfo(buffer).clearActiveBufferRegion();
-        //buffer.clear();
-        return;
-    }
-    */
     
     transport.getNextAudioBlock(juce::AudioSourceChannelInfo(buffer));
 
@@ -264,7 +222,27 @@ void MusicPlayerAudioProcessor::changeTransportState(transportState newState){
 
 }
 
-void MusicPlayerAudioProcessor::chooseAudioFile(){
+void MusicPlayerAudioProcessor::loadAudioFile(const juce::File& file){
+
+    DBG("loadAudioFile()");
+    transport.stop();
+    transport.setSource(nullptr);
+    readerSource_ptr = nullptr;
+
+    juce::AudioFormatReader* reader = formatManager.createReaderFor(file);
+    currentlyLoadedFile = file;
+
+    if(reader != nullptr){
+        DBG("format name: ");
+        DBG(reader->getFormatName());
+        readerSource_ptr.reset(new juce::AudioFormatReaderSource(reader, true));
+        transport.setSource(readerSource_ptr.get(),0,nullptr,reader->sampleRate);
+    }
+
+}
+
+
+void MusicPlayerAudioProcessor::chooseAudioFile(){//original, replaced by above
 
     //called by openButtonCLicked() in PluginEditor
 
@@ -278,18 +256,20 @@ void MusicPlayerAudioProcessor::chooseAudioFile(){
     
     if(fileChosen){
 
-        
+       //// 
+       //
         juce::File file = chooser.getResult();
-        juce::AudioFormatReader* reader = formatManager.createReaderFor(file);
+        //juce::AudioFormatReader* reader = formatManager.createReaderFor(file);
+        formatReader = formatManager.createReaderFor(file);
         //DBG(reader->getFormatName());   
         
 
 
-        if(reader != nullptr){
+        if(formatReader!= nullptr){
             
             transport.setSource(nullptr);//added Match 2021 - suggestion from Xenakios (discord)
-            readerSource_ptr.reset(new juce::AudioFormatReaderSource(reader, true));
-            transport.setSource(readerSource_ptr.get(),0,nullptr,reader->sampleRate);
+            readerSource_ptr.reset(new juce::AudioFormatReaderSource(formatReader, true));
+            transport.setSource(readerSource_ptr.get(),0,nullptr,formatReader->sampleRate);
 
             //original:
             //std::unique_ptr<juce::AudioFormatReaderSource> newSource(new juce::AudioFormatReaderSource(reader, true));

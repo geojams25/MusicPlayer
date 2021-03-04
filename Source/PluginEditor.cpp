@@ -41,6 +41,8 @@ MusicPlayerAudioProcessorEditor::MusicPlayerAudioProcessorEditor (MusicPlayerAud
     pauseButton.addListener(this);
     pauseButton.setEnabled(false);
 
+    //audioProcessor.transport.addChangeListener(this);
+
 
 }
 
@@ -74,10 +76,21 @@ void MusicPlayerAudioProcessorEditor::resized()
 void MusicPlayerAudioProcessorEditor::openButtonClicked(){
 
     DBG("openButtonClicked()");//remove when working
-    audioProcessor.chooseAudioFile();
-    playButton.setEnabled(true);
-    stopButton.setEnabled(false);
-    pauseButton.setEnabled(false);
+    //audioProcessor.chooseAudioFile();//original
+    //
+    //new...
+    juce::FileChooser chooser("Select File", juce::File::getSpecialLocation(juce::File::userMusicDirectory));
+    bool fileChosen = chooser.browseForFileToOpen();
+     if(fileChosen){
+
+
+        audioProcessor.loadAudioFile(chooser.getResult());
+        audioProcessor.transport.setPosition(0.0);
+
+        playButton.setEnabled(true);
+        stopButton.setEnabled(false);
+        pauseButton.setEnabled(false);
+    }
 }
 
 void MusicPlayerAudioProcessorEditor::playButtonClicked(){

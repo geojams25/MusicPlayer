@@ -15,6 +15,7 @@
 /**
 */
 class MusicPlayerAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::Button::Listener
+                                                                            //public juce::ChangeListener
 {
 public:
     MusicPlayerAudioProcessorEditor (MusicPlayerAudioProcessor&);

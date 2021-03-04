@@ -10,7 +10,6 @@
 
 #include <JuceHeader.h>
 #include <memory>
-
 //==============================================================================
 /**
 */
@@ -70,18 +69,19 @@ public:
     void changeListenerCallback(juce::ChangeBroadcaster *source) override;//have to include this if we inherit from changeListener class
     void changeTransportState(transportState newState);
     void chooseAudioFile();
-
-
-    
-    
-private:
+    void loadAudioFile(const juce::File& file);
 
     juce::AudioTransportSource transport;
+    juce::File currentlyLoadedFile;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource_ptr; 
     juce::AudioFormatManager formatManager; //This class contains a list of audio formats (such as WAV, AIFF,
    // Ogg Vorbis, and so on) and can create suitable objects for reading audio data from these formats.
-   
 
+private:
+
+       
+
+    juce::AudioFormatReader* formatReader{nullptr};
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MusicPlayerAudioProcessor)
