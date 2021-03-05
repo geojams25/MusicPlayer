@@ -152,6 +152,21 @@ void MusicPlayerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     
     transport.getNextAudioBlock(juce::AudioSourceChannelInfo(buffer));
 
+    /*
+    for (int channel = 0; channel < totalNumInputChannels; ++channel)                                                   
+        {                                                                                                                   
+            auto* channelData = buffer.getWritePointer (channel);                                                           
+            
+            // ..do something to the data...control the gain                                                                           
+            for(int sample=0; sample<buffer.getNumSamples(); sample++){                                                     
+                    
+                    
+            }                                                                                                               
+            
+        }           
+    */
+    
+
 }
 
 //==============================================================================
