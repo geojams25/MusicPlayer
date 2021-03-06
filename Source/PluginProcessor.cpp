@@ -239,7 +239,7 @@ void MusicPlayerAudioProcessor::changeTransportState(transportState newState){
 
 void MusicPlayerAudioProcessor::loadAudioFile(const juce::File& file){
 
-    DBG("loadAudioFile()");
+    //////DBG("loadAudioFile()");
     transport.stop();
     transport.setSource(nullptr);
     readerSource_ptr = nullptr;
@@ -248,7 +248,7 @@ void MusicPlayerAudioProcessor::loadAudioFile(const juce::File& file){
     currentlyLoadedFile = file;
 
     if(reader != nullptr){
-        DBG("format name: ");
+        //DBG("format name: ");
         DBG(reader->getFormatName());
         readerSource_ptr.reset(new juce::AudioFormatReaderSource(reader, true));
         transport.setSource(readerSource_ptr.get(),0,nullptr,reader->sampleRate);

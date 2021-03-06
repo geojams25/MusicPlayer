@@ -96,7 +96,7 @@ void MusicPlayerAudioProcessorEditor::resized()
 
 void MusicPlayerAudioProcessorEditor::openButtonClicked(){
 
-    DBG("openButtonClicked()");//remove when working
+    //DBG("openButtonClicked()");//remove when working
     juce::FileChooser chooser("Select File", juce::File::getSpecialLocation(juce::File::userMusicDirectory));
     bool fileChosen = chooser.browseForFileToOpen();
 
@@ -116,7 +116,7 @@ void MusicPlayerAudioProcessorEditor::openButtonClicked(){
 
 void MusicPlayerAudioProcessorEditor::playButtonClicked(){
 
-    DBG("playButtonClicked()");
+    //DBG("playButtonClicked()");
     stopButton.setEnabled(true);
     playButton.setEnabled(false);//greys out button
     pauseButton.setEnabled(true);
@@ -126,7 +126,7 @@ void MusicPlayerAudioProcessorEditor::playButtonClicked(){
 
 void MusicPlayerAudioProcessorEditor::stopButtonClicked(){
 
-    DBG("stopButtonClicked()");
+    //DBG("stopButtonClicked()");
     playButton.setEnabled(true);
     stopButton.setEnabled(false);
     pauseButton.setEnabled(false);
@@ -145,7 +145,7 @@ void MusicPlayerAudioProcessorEditor::stopButtonClicked(){
 
 void MusicPlayerAudioProcessorEditor::pauseButtonClicked(){
 
-    DBG("pauseButtonClicked()");
+    //DBG("pauseButtonClicked()");
     playButton.setEnabled(true);
     stopButton.setEnabled(true);
     pauseButton.setEnabled(false);
