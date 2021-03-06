@@ -152,20 +152,7 @@ void MusicPlayerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     
     transport.getNextAudioBlock(juce::AudioSourceChannelInfo(buffer));
 
-    /*
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)                                                   
-        {                                                                                                                   
-            auto* channelData = buffer.getWritePointer (channel);                                                           
-            
-            // ..do something to the data...control the gain                                                                           
-            for(int sample=0; sample<buffer.getNumSamples(); sample++){                                                     
-                    
-                    
-            }                                                                                                               
-            
-        }           
-    */
-    
+        
 
 }
 
@@ -239,7 +226,6 @@ void MusicPlayerAudioProcessor::changeTransportState(transportState newState){
 
 void MusicPlayerAudioProcessor::loadAudioFile(const juce::File& file){
 
-    //////DBG("loadAudioFile()");
     transport.stop();
     transport.setSource(nullptr);
     readerSource_ptr = nullptr;
@@ -248,7 +234,6 @@ void MusicPlayerAudioProcessor::loadAudioFile(const juce::File& file){
     currentlyLoadedFile = file;
 
     if(reader != nullptr){
-        //DBG("format name: ");
         DBG(reader->getFormatName());
         readerSource_ptr.reset(new juce::AudioFormatReaderSource(reader, true));
         transport.setSource(readerSource_ptr.get(),0,nullptr,reader->sampleRate);
@@ -257,42 +242,6 @@ void MusicPlayerAudioProcessor::loadAudioFile(const juce::File& file){
 }
 
 
-void MusicPlayerAudioProcessor::chooseAudioFile(){//original, replaced by above
-
-    //called by openButtonCLicked() in PluginEditor
-
-    transport.stop();
-    //transport.setSource(nullptr);
-
-
-    juce::FileChooser chooser("Select an Audio File", juce::File::getSpecialLocation(juce::File::userMusicDirectory) , "*.wav; *.mp3");
-
-    bool fileChosen = chooser.browseForFileToOpen();
-    
-    if(fileChosen){
-
-       //// 
-       //
-        juce::File file = chooser.getResult();
-        //juce::AudioFormatReader* reader = formatManager.createReaderFor(file);
-        formatReader = formatManager.createReaderFor(file);
-        //DBG(reader->getFormatName());   
-        
-
-
-        if(formatReader!= nullptr){
-            
-            transport.setSource(nullptr);//added Match 2021 - suggestion from Xenakios (discord)
-            readerSource_ptr.reset(new juce::AudioFormatReaderSource(formatReader, true));
-            transport.setSource(readerSource_ptr.get(),0,nullptr,formatReader->sampleRate);
-
-            //original:
-            //std::unique_ptr<juce::AudioFormatReaderSource> newSource(new juce::AudioFormatReaderSource(reader, true));
-            //transport.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
-            //readerSource_ptr.reset(newSource.release());
-        }
-    }
-}
 
 //==============================================================================
 // This creates new instances of the plugin..

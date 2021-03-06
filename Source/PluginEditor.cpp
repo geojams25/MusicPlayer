@@ -42,17 +42,18 @@ MusicPlayerAudioProcessorEditor::MusicPlayerAudioProcessorEditor (MusicPlayerAud
     addAndMakeVisible(&pauseButton);
     pauseButton.addListener(this);
     pauseButton.setEnabled(false);
+    pauseButton.setColour(juce::TextButton::buttonColourId, juce::Colours::palegoldenrod);
     pauseButton.setLookAndFeel(&lookV3);
 
     positionSlider.setSliderStyle(juce::Slider::SliderStyle::LinearHorizontal);
-    addAndMakeVisible(positionSlider);
+    addAndMakeVisible(&positionSlider);
     positionSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false,50,30);
     positionSlider.addListener(this);
     positionSlider.setColour(juce::Slider::thumbColourId, juce::Colours::darkgoldenrod);
     positionSlider.setRange(0,10,1);//default. will be set properly when file loaded
 
     volumeSlider.setSliderStyle(juce::Slider::SliderStyle::LinearBar);
-    addAndMakeVisible(volumeSlider);
+    addAndMakeVisible(&volumeSlider);
     volumeSlider.setColour(juce::Slider::trackColourId, juce::Colours::purple);
     volumeSlider.setRange(0.0,1.0);
     volumeSlider.setTextBoxStyle(juce::Slider::NoTextBox,true,0,0); 
