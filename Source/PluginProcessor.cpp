@@ -9,16 +9,20 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include <memory>
+#include <vector>
 
 //==============================================================================
 MusicPlayerAudioProcessor::MusicPlayerAudioProcessor() : AudioProcessor(BusesProperties().withOutput("Out", juce::AudioChannelSet::stereo()))
+                                                        ,apvts(*this,nullptr,"parameters",createParameters())
 
 {
     formatManager.registerBasicFormats();
     transport.addChangeListener(this);
+    transport.setPosition(0.0);
 
     state = stopped;//initial state of transport
     
+    fileLoaded = false;//used by the pluginEditor. if false will disable all buttons (e.g on startup)
 
     
 
@@ -141,7 +145,6 @@ bool MusicPlayerAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 void MusicPlayerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
      
-    //juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     
@@ -149,9 +152,11 @@ void MusicPlayerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
         for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
+    auto volume = apvts.getRawParameterValue("VOL");
+
     
     transport.getNextAudioBlock(juce::AudioSourceChannelInfo(buffer));
-
+    transport.setGain(volume->load());
         
 
 }
@@ -234,10 +239,19 @@ void MusicPlayerAudioProcessor::loadAudioFile(const juce::File& file){
     currentlyLoadedFile = file;
 
     if(reader != nullptr){
-        DBG(reader->getFormatName());
         readerSource_ptr.reset(new juce::AudioFormatReaderSource(reader, true));
         transport.setSource(readerSource_ptr.get(),0,nullptr,reader->sampleRate);
+        fileLoaded = true;
     }
+
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout MusicPlayerAudioProcessor::createParameters(){
+        
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("VOL","Vol",0.0f,1.0f,0.5f));
+
+    return {params.begin(), params.end()};
 
 }
 

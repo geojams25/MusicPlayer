@@ -9,6 +9,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <memory>
 #include "PluginProcessor.h"
 
 //==============================================================================
@@ -41,7 +42,8 @@ private:
     juce::Slider volumeSlider;
 
 
-
+    //MAKE SURE TO DECLARE ATTACHMENTS AFTER THEIR CONTROLS!
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> volSliderAttachment;
 
 
     void openButtonClicked();

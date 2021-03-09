@@ -8,6 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include <memory>
 
 //==============================================================================
 MusicPlayerAudioProcessorEditor::MusicPlayerAudioProcessorEditor (MusicPlayerAudioProcessor& p)
@@ -26,40 +27,61 @@ MusicPlayerAudioProcessorEditor::MusicPlayerAudioProcessorEditor (MusicPlayerAud
     playButton.setButtonText("Play");
     addAndMakeVisible(&playButton);
     playButton.addListener(this);
-    playButton.setEnabled(false);
     playButton.setColour(juce::TextButton::buttonColourId, juce::Colours::seagreen);
     playButton.setLookAndFeel(&lookV3);
+
+    if(audioProcessor.transport.isPlaying() || !audioProcessor.fileLoaded)
+        playButton.setEnabled(false);
+    else playButton.setEnabled(true);
 
 
     stopButton.setButtonText("Stop");
     addAndMakeVisible(&stopButton);
     stopButton.addListener(this);
-    stopButton.setEnabled(false);
     stopButton.setColour(juce::TextButton::buttonColourId, juce::Colours::indianred);
     stopButton.setLookAndFeel(&lookV3);
+
+    if(audioProcessor.transport.isPlaying())
+        stopButton.setEnabled(true);
+    else stopButton.setEnabled(false);
 
     pauseButton.setButtonText("Pause");
     addAndMakeVisible(&pauseButton);
     pauseButton.addListener(this);
-    pauseButton.setEnabled(false);
     pauseButton.setColour(juce::TextButton::buttonColourId, juce::Colours::palegoldenrod);
     pauseButton.setLookAndFeel(&lookV3);
+
+    if(audioProcessor.transport.isPlaying())
+        pauseButton.setEnabled(true);
+    else pauseButton.setEnabled(false);
 
     positionSlider.setSliderStyle(juce::Slider::SliderStyle::LinearHorizontal);
     addAndMakeVisible(&positionSlider);
     positionSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false,50,30);
     positionSlider.addListener(this);
     positionSlider.setColour(juce::Slider::thumbColourId, juce::Colours::darkgoldenrod);
-    positionSlider.setRange(0,10,1);//default. will be set properly when file loaded
+
+    if(audioProcessor.fileLoaded){
+        positionSlider.setRange(0.0,audioProcessor.transport.getLengthInSeconds(),1.0);//default. will be set properly when file loaded
+        positionSlider.setValue(audioProcessor.transport.getCurrentPosition(), juce::dontSendNotification);
+    }
+    else{
+        positionSlider.setRange(0.0,10.0,1.0);
+        positionSlider.setValue(0.0, juce::dontSendNotification);
+    }
 
     volumeSlider.setSliderStyle(juce::Slider::SliderStyle::LinearBar);
     addAndMakeVisible(&volumeSlider);
     volumeSlider.setColour(juce::Slider::trackColourId, juce::Colours::purple);
-    volumeSlider.setRange(0.0,1.0);
     volumeSlider.setTextBoxStyle(juce::Slider::NoTextBox,true,0,0); 
-    volumeSlider.addListener(this);
+    //volumeSlider.addListener(this);//this now handled via AudioProcessorValueStateTree
     volumeSlider.setSkewFactor(0.5);//arg <1 gives more of the slider over to lower values
-    volumeSlider.setValue(0.25);
+    
+    volSliderAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts
+            ,"VOL",volumeSlider);
+
+    if(audioProcessor.transport.isPlaying())//will be triggered if plugin window is closed and opened again(new gui instance)
+        startTimer(1000);//ms intervals
 }
 
 MusicPlayerAudioProcessorEditor::~MusicPlayerAudioProcessorEditor()
@@ -97,7 +119,6 @@ void MusicPlayerAudioProcessorEditor::resized()
 
 void MusicPlayerAudioProcessorEditor::openButtonClicked(){
 
-    //DBG("openButtonClicked()");//remove when working
     juce::FileChooser chooser("Select File", juce::File::getSpecialLocation(juce::File::userMusicDirectory));
     bool fileChosen = chooser.browseForFileToOpen();
 
@@ -117,7 +138,6 @@ void MusicPlayerAudioProcessorEditor::openButtonClicked(){
 
 void MusicPlayerAudioProcessorEditor::playButtonClicked(){
 
-    //DBG("playButtonClicked()");
     stopButton.setEnabled(true);
     playButton.setEnabled(false);//greys out button
     pauseButton.setEnabled(true);
@@ -127,7 +147,6 @@ void MusicPlayerAudioProcessorEditor::playButtonClicked(){
 
 void MusicPlayerAudioProcessorEditor::stopButtonClicked(){
 
-    //DBG("stopButtonClicked()");
     playButton.setEnabled(true);
     stopButton.setEnabled(false);
     pauseButton.setEnabled(false);
@@ -146,7 +165,6 @@ void MusicPlayerAudioProcessorEditor::stopButtonClicked(){
 
 void MusicPlayerAudioProcessorEditor::pauseButtonClicked(){
 
-    //DBG("pauseButtonClicked()");
     playButton.setEnabled(true);
     stopButton.setEnabled(true);
     pauseButton.setEnabled(false);
@@ -180,7 +198,7 @@ void MusicPlayerAudioProcessorEditor:: buttonClicked (juce::Button* button){
 }
 
 
-void MusicPlayerAudioProcessorEditor::sliderValueChanged(juce::Slider* slider){
+void MusicPlayerAudioProcessorEditor::sliderValueChanged(juce::Slider* slider){ //old (depreciated)
 
     if(slider == &positionSlider){
 
@@ -190,11 +208,10 @@ void MusicPlayerAudioProcessorEditor::sliderValueChanged(juce::Slider* slider){
     else if(slider == &volumeSlider){
 
         //audioProcessor.transport.setGain(juce::Decibels::decibelsToGain(slider->getValue()));//for dB (change range to -80, 0 etc)
-        audioProcessor.transport.setGain(slider->getValue());
+        audioProcessor.transport.setGain(slider->getValue());//decided to use this and implement a skew factor (see constructor)
     }
 
 }
-
 
 void MusicPlayerAudioProcessorEditor::timerCallback(){
 

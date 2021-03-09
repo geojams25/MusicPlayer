@@ -70,14 +70,18 @@ public:
     void changeTransportState(transportState newState);
     void chooseAudioFile();
     void loadAudioFile(const juce::File& file);
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
 
     juce::AudioTransportSource transport;
     juce::File currentlyLoadedFile;
+    bool fileLoaded;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource_ptr; 
     juce::AudioFormatManager formatManager; //This class contains a list of audio formats (such as WAV, AIFF,
    // Ogg Vorbis, and so on) and can create suitable objects for reading audio data from these formats.
 
     juce::Slider positionSlider;//follows audio progress and can be used to jump to time positions
+
+    juce::AudioProcessorValueTreeState apvts;
 
 private:
 
