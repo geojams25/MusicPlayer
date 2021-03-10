@@ -8,6 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -178,12 +179,36 @@ void MusicPlayerAudioProcessor::getStateInformation (juce::MemoryBlock& destData
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+
+    auto state = apvts.copyState();
+
+    std::unique_ptr<juce::XmlElement> xml(state.createXml());//creates an xml from the apvts
+    xml->setAttribute("audioFile", currentlyLoadedFile.getFullPathName());//add the audio file to the xml
+    copyXmlToBinary(*xml, destData);
+
+    
 }
 
 void MusicPlayerAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+
+    if(xmlState.get() != nullptr){
+        if(xmlState->hasTagName(apvts.state.getType())){
+            
+            currentlyLoadedFile = juce::File::createFileWithoutCheckingPath(xmlState->getStringAttribute("audioFile"));
+            if(currentlyLoadedFile.existsAsFile()){
+                loadAudioFile(currentlyLoadedFile);
+            }
+
+            apvts.replaceState(juce::ValueTree::fromXml(*xmlState));//load all values for the apvts
+            
+        }
+        
+    }
 }
 
 
@@ -217,7 +242,7 @@ void MusicPlayerAudioProcessor::changeTransportState(transportState newState){
                 break;
             case stopping:
                 transport.stop();
-                break;
+            break;
             case pausing:
                 transport.stop();
                 break;
@@ -241,6 +266,10 @@ void MusicPlayerAudioProcessor::loadAudioFile(const juce::File& file){
     if(reader != nullptr){
         readerSource_ptr.reset(new juce::AudioFormatReaderSource(reader, true));
         transport.setSource(readerSource_ptr.get(),0,nullptr,reader->sampleRate);
+
+        //apvts.state.setProperty("File",currentlyLoadedFile.getFullPathName(),nullptr);
+        
+
         fileLoaded = true;
     }
 
@@ -251,6 +280,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout MusicPlayerAudioProcessor::c
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     params.push_back(std::make_unique<juce::AudioParameterFloat>("VOL","Vol",0.0f,1.0f,0.5f));
 
+    
     return {params.begin(), params.end()};
 
 }
